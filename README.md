@@ -1,5 +1,7 @@
 # Kafka Mini Project – User Activity Event Pipeline
 
+> **Part of a progression:** this repo covers **Kafka fundamentals** in Python. The production-style follow-up, with idempotent processing, retries, and a dead-letter topic, is [`idempotent-kafka-pipeline`](https://github.com/surya532/idempotent-kafka-pipeline) (Java 17, Spring Boot).
+
 ## 📌 Overview
 
 This project is a **minimal, hands-on Kafka pipeline** built to understand **how Kafka works internally**, not just how to use it.
@@ -18,14 +20,17 @@ The project runs **locally using Docker and Python**.
 
 ## 🧠 Architecture
 
-```
-Python Producer
-      │
-      ▼
-Kafka Topic (user-events, 3 partitions)
-      │
-      ▼
-Python Consumers (Consumer Group)
+```mermaid
+flowchart LR
+  P[Python Producer<br/>key = user_id] --> T[(Topic: user-events<br/>3 partitions)]
+  T --> C1[Consumer A]
+  T --> C2[Consumer B]
+  T --> C3[Consumer C]
+  subgraph CG[Consumer group]
+    C1
+    C2
+    C3
+  end
 ```
 
 ---
@@ -36,6 +41,7 @@ Python Consumers (Consumer Group)
 * **Python** – producer & consumer implementation
 * **Docker & Docker Compose** – local Kafka setup
 * **kafka-python** – Kafka client library
+* **GitHub Actions** – lint and compile checks on every push
 
 ---
 
@@ -43,9 +49,12 @@ Python Consumers (Consumer Group)
 
 ```
 kafka-mini-project/
-├── docker-compose.yml   # Kafka setup
-├── producer.py          # Kafka producer
-├── consumer.py          # Kafka consumer
+├── .github/workflows/ci.yml   # lint + compile checks
+├── docs/LESSONS.md            # what I learned running the experiments
+├── docker-compose.yml         # Kafka setup
+├── producer.py                # Kafka producer
+├── consumer.py                # Kafka consumer
+├── requirements.txt
 └── README.md
 ```
 
@@ -100,7 +109,7 @@ docker exec -it kafka kafka-topics.sh \
 ## 🐍 Install Python Dependencies
 
 ```bash
-pip install kafka-python
+pip install -r requirements.txt
 ```
 
 ---
@@ -215,6 +224,21 @@ This project intentionally focuses on **streaming semantics**, not task queues.
 
 ---
 
+## 📝 Lessons Learned
+
+See [docs/LESSONS.md](docs/LESSONS.md).
+
+---
+
+## ⚠️ Limitations
+
+* Single broker with replication factor 1, so this is not a durability demo
+* At-least-once semantics only; no deduplication (handled in the Java follow-up)
+* No schema registry; events are plain JSON
+* `kafka-python` client; no consumer lag dashboards
+
+---
+
 ## 📈 Possible Extensions
 
 * Add an S3 sink consumer
@@ -224,4 +248,4 @@ This project intentionally focuses on **streaming semantics**, not task queues.
 * Deploy using AWS MSK
 * Add monitoring (lag metrics)
 
----
+> Idempotent processing, retries, a dead-letter topic, and Prometheus metrics are implemented in [`idempotent-kafka-pipeline`](https://github.com/surya532/idempotent-kafka-pipeline).
